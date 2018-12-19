@@ -70,19 +70,19 @@ class DataSpeech():
         # 设定选取哪一项作为要使用的数据集
         if(self.type=='train'):
             filename_wavlist_thchs30 = 'thchs30' + self.slash + 'train.wav.lst'
-            filename_wavlist_stcmds = 'st-cmds' + self.slash + 'train.wav.txt'
-            filename_symbollist_thchs30 = 'thchs30' + self.slash + 'train.syllable.txt'
-            filename_symbollist_stcmds = 'st-cmds' + self.slash + 'train.syllable.txt'
+            filename_wavlist_stcmds = 'st-cmds' + self.slash + 'train.wav.lst'
+            filename_symbollist_thchs30 = 'thchs30' + self.slash + 'train.syllabel.txt'
+            filename_symbollist_stcmds = 'st-cmds' + self.slash + 'train.syllabel.txt'
         elif(self.type=='dev'):
-            filename_wavlist_thchs30 = 'thchs30' + self.slash + 'cv.wav.lst'
-            filename_wavlist_stcmds = 'st-cmds' + self.slash + 'dev.wav.txt'
-            filename_symbollist_thchs30 = 'thchs30' + self.slash + 'cv.syllable.txt'
-            filename_symbollist_stcmds = 'st-cmds' + self.slash + 'dev.syllable.txt'
+            filename_wavlist_thchs30 = 'thchs30' + self.slash + 'dev.wav.lst'
+            filename_wavlist_stcmds = 'st-cmds' + self.slash + 'dev.wav.lst'
+            filename_symbollist_thchs30 = 'thchs30' + self.slash + 'dev.syllabel.txt'
+            filename_symbollist_stcmds = 'st-cmds' + self.slash + 'dev.syllabel.txt'
         elif(self.type=='test'):
             filename_wavlist_thchs30 = 'thchs30' + self.slash + 'test.wav.lst'
-            filename_wavlist_stcmds = 'st-cmds' + self.slash + 'test.wav.txt'
-            filename_symbollist_thchs30 = 'thchs30' + self.slash + 'test.syllable.txt'
-            filename_symbollist_stcmds = 'st-cmds' + self.slash + 'test.syllable.txt'
+            filename_wavlist_stcmds = 'st-cmds' + self.slash + 'test.wav.lst'
+            filename_symbollist_thchs30 = 'thchs30' + self.slash + 'test.syllabel.txt'
+            filename_symbollist_stcmds = 'st-cmds' + self.slash + 'test.syllabel.txt'
         else:
             filename_wavlist = '' # 默认留空
             filename_symbollist = ''
@@ -235,8 +235,8 @@ class DataSpeech():
                 txt_l=i.split('\t')
                 list_symbol.append(txt_l[0])
         txt_obj.close()
-        list_symbol.append('_')
         self.SymbolNum = len(list_symbol)
+        print(self.SymbolNum)
         return list_symbol
 
     def GetSymbolNum(self):

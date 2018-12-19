@@ -34,7 +34,7 @@ class ModelSpeech(): # 语音模型类
         初始化
         默认输出的拼音的表示大小是1422，即1421个拼音+1个空白块
         '''
-        MS_OUTPUT_SIZE = 1422
+        MS_OUTPUT_SIZE = 1457
         self.MS_OUTPUT_SIZE = MS_OUTPUT_SIZE # 神经网络最终输出的每一个字符向量维度的大小
         #self.BATCH_SIZE = BATCH_SIZE # 一次训练的batch
         self.label_max_string_length = 64
@@ -135,6 +135,7 @@ class ModelSpeech(): # 语音模型类
         # so CTC loss is implemented in a lambda layer
         
         #layer_out = Lambda(ctc_lambda_func,output_shape=(self.MS_OUTPUT_SIZE, ), name='ctc')([y_pred, labels, input_length, label_length])#(layer_h6) # CTC
+        print(y_pred,labels)
         loss_out = Lambda(self.ctc_lambda_func, output_shape=(1,), name='ctc')([y_pred, labels, input_length, label_length])
         
         
