@@ -4,22 +4,14 @@
 获取符号字典列表的程序
 '''
 
-
-def GetSymbolList(datapath):
+def GetSymbolList(self):
     '''
     加载拼音符号列表，用于标记符号
     返回一个列表list类型变量
     '''
-    txt_obj=open('dict.txt','r',encoding='UTF-8') # 打开文件并读入
-    txt_text=txt_obj.read()
-    txt_lines=txt_text.split('\n') # 文本分割
-    list_symbol=[] # 初始化符号列表
-    for i in txt_lines:
-        if(i!=''):
-            txt_l=i.split('\t')
-            list_symbol.append(txt_l[0])
-    txt_obj.close()
-    SymbolNum = len(list_symbol)
-    print(SymbolNum)
-    return list_symbol
-    
+    id2py_dict={}
+    with open('/data/dataset/dict/py2id_dict.txt','r',encoding='UTF-8') as file:
+        for line in file:
+            py,idx=line.strip('\n').strip().split('\t')
+            id2py_dict[int(idx)]=py
+    return id2py_dict

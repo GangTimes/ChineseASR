@@ -29,12 +29,13 @@ ModelName='251'
 #NUM_GPU = 2
 
 class ModelSpeech(): # 语音模型类
-    def __init__(self, datapath):
+    def __init__(self):
         '''
         初始化
-        默认输出的拼音的表示大小是1422，即1421个拼音+1个空白块
+        尽管我已经在字典中加入了空白块，但是仍然不行 猜想空白块会自动在CTC中加入，所以类别标签要多给1
         '''
-        MS_OUTPUT_SIZE = 1457
+        datapath=Config.data_dir
+        MS_OUTPUT_SIZE = 1472
         self.MS_OUTPUT_SIZE = MS_OUTPUT_SIZE # 神经网络最终输出的每一个字符向量维度的大小
         #self.BATCH_SIZE = BATCH_SIZE # 一次训练的batch
         self.label_max_string_length = 64
@@ -142,7 +143,7 @@ class ModelSpeech(): # 语音模型类
         
         model = Model(inputs=[input_data, labels, input_length, label_length], outputs=loss_out)
         
-        #model.summary()
+        model.summary()
         
         # clipnorm seems to speeds up convergence
         #sgd = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
@@ -168,7 +169,7 @@ class ModelSpeech(): # 语音模型类
     
     
     
-    def TrainModel(self, datapath, epoch = 2, save_step = 1000, batch_size = 32, filename = abspath + 'model_speech/m' + ModelName + '/speech_model'+ModelName):
+    def TrainModel(self, epoch = 2, save_step = 1000, batch_size = 32, filename = abspath + 'model_speech/m' + ModelName + '/speech_model'+ModelName):
         '''
         训练模型
         参数：
@@ -177,7 +178,7 @@ class ModelSpeech(): # 语音模型类
             save_step: 每多少步保存一次模型
             filename: 默认保存文件名，不含文件后缀名
         '''
-        data=DataSpeech(datapath, 'train')
+        data=DataSpeech( 'train')
         
         num_data = data.GetDataNum() # 获取数据的数量
         
@@ -199,8 +200,8 @@ class ModelSpeech(): # 语音模型类
                     break
                 
                 self.SaveModel(comment='_e_'+str(epoch)+'_step_'+str(n_step * save_step))
-                self.TestModel(self.datapath, str_dataset='train', data_count = 4)
-                self.TestModel(self.datapath, str_dataset='dev', data_count = 4)
+                self.TestModel( str_dataset='train', data_count = 4)
+                self.TestModel( str_dataset='dev', data_count = 4)
                 
     def LoadModel(self,filename = abspath + 'model_speech/m'+ModelName+'/speech_model'+ModelName+'.model'):
         '''
@@ -219,7 +220,7 @@ class ModelSpeech(): # 语音模型类
         f.write(filename+comment)
         f.close()
 
-    def TestModel(self, datapath='', str_dataset='dev', data_count = 32, out_report = False, show_ratio = True, io_step_print = 10, io_step_file = 10):
+    def TestModel(self,  str_dataset='dev', data_count = 32, out_report = False, show_ratio = True, io_step_print = 10, io_step_file = 10):
         '''
         测试检验模型效果
         
@@ -230,7 +231,7 @@ class ModelSpeech(): # 语音模型类
             为了减少测试时文件读写的io开销，可以通过调整这个参数来实现
         
         '''
-        data=DataSpeech(self.datapath, str_dataset)
+        data=DataSpeech( str_dataset)
         #data.LoadDataList(str_dataset) 
         num_data = data.GetDataNum() # 获取数据的数量
         if(data_count <= 0 or data_count > num_data): # 当data_count为小于等于0或者大于测试数据量的值时，则使用全部数据来测试
@@ -375,7 +376,7 @@ class ModelSpeech(): # 语音模型类
         r1 = self.Predict(data_input, input_length)
         #t3=time.time()
         #print('time cost:',t3-t2)
-        list_symbol_dic = GetSymbolList(self.datapath) # 获取拼音列表
+        list_symbol_dic = GetSymbolList() # 获取拼音列表
         
         
         r_str=[]
@@ -443,7 +444,7 @@ if(__name__=='__main__'):
     
     
     #ms.LoadModel(modelpath + 'speech_model251_e_0_step_12000.model')
-    ms.TrainModel(datapath, epoch = 50, batch_size = 16, save_step = 500)
+    ms.TrainModel(datapath, epoch = 50, batch_size = 64, save_step = 500)
     
     #t1=time.time()
     #ms.TestModel(datapath, str_dataset='train', data_count = 128, out_report = True)

@@ -76,7 +76,7 @@ def creatModel():
     # 全连接层
     layer_h13 = Dense(256, activation="relu", use_bias=True, kernel_initializer='he_normal')(layer_h12)
     layer_h13 = BatchNormalization(axis=1)(layer_h13)
-    layer_h14 = Dense(1457, use_bias=True, kernel_initializer='he_normal')(layer_h13)
+    layer_h14 = Dense(1472, use_bias=True, kernel_initializer='he_normal')(layer_h13)
     output = Activation('softmax', name='Activation0')(layer_h14)
     model_data = Model(inputs=input_data, outputs=output)
     # ctc层
@@ -150,7 +150,7 @@ def test(datapath = '/data/dataset/',
         batch_size = 1):
     # 准备测试数据，以及生成字典
     p = get_data(datapath = datapath, read_type = 'test', batch_size = batch_size)
-    num2word = p.label_dict
+    num2word = p.id2py
     yielddatas = p.data_generator()
     # 载入训练好的模型，并进行识别
     model, model_data = creatModel()

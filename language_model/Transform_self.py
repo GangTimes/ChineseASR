@@ -6,9 +6,9 @@ import numpy as np
 import tensorflow as tf
 
 class Config:
-    data_path='data/zh.tsv'
-    hz2id_dict='data/hz2id.txt'
-    py2id_dict='data/py2id.txt'
+    data_path='/data/dataset/pinyin2hanzi/py2hz_train.tsv'
+    hz2id_dict='/data/dataset/dict/hz2id_dict.txt'
+    py2id_dict='/data/dataset/dict/py2id_dict.txt'
     model_dir='log/transform_model/'                                           
     model_name='model'
     model_path=model_dir+model_name
@@ -48,8 +48,8 @@ def read_dict():
             pny2idx[pny]=int(idx.strip())
             idx2pny[int(idx.strip())]=pny.strip()
         
-    Config.pny_size=len(pny2idx)
-    Config.hanzi_size=len(hanzi2idx)
+    Config.input_vocab_size=len(pny2idx)
+    Config.label_vocab_size=len(hanzi2idx)
     return pny2idx,idx2pny,hanzi2idx,idx2hanzi
 def read_data():
     """
@@ -430,9 +430,13 @@ def train():
     input_num,label_num=read_data()
     batch_size=Config.batch_size
     g = Graph()
-
+    
+    os.environ["CUDA_VISIBLE_DEVICES"] = '2' #use GPU with ID=0
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.95 # maximun alloc gpu50% of MEM
+    config.gpu_options.allow_growth = True #allocate dynamicall
     saver =tf.train.Saver()
-    with tf.Session() as sess:
+    with tf.Session(config=config) as sess:
         merged = tf.summary.merge_all()
         sess.run(tf.global_variables_initializer())
         ckpt=tf.train.latest_checkpoint(Config.model_dir)
@@ -458,6 +462,11 @@ def train():
 
 def test():
     Config.is_training = False
+    os.environ["CUDA_VISIBLE_DEVICES"] = '2' #use GPU with ID=0
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.95 # maximun alloc gpu50% of MEM
+    config.gpu_options.allow_growth = True #allocate dynamicall
+    pny2id,id2pny,han2id,id2han=read_dict()
 
     g = Graph()
 
@@ -472,11 +481,12 @@ def test():
             line = input('输入测试拼音: ')
             if line == 'exit': break
             line = line.strip('\n').split(' ')
-            x = np.array([pny2id.index(pny) for pny in line])
+            x = np.array([pny2id[pny] for pny in line])
             x = x.reshape(1, -1)
             preds = sess.run(g.preds, {g.x: x})
-            got = ''.join(han2id[idx] for idx in preds[0])
+            got = ''.join(id2han[idx] for idx in preds[0])
             print(got)
 
 if __name__=="__main__":
     train()
+    #test()

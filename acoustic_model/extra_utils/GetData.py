@@ -27,8 +27,8 @@ class get_data():
         self.primewords_dir = datapath +'primewords/'
         self.stcmds_dir = datapath + 'st-cmds/'
         # 定义标注拼音映射为数字的字典 ['a1', 'a2', ...]
-        self.label_dict = self.gen_label_dict()
-        self.dict_len = len(self.label_dict)
+        self.py2id,self.id2py= self.gen_label_dict()
+        self.dict_len = len(self.py2id)
         # 四个数据集标签的字典 [label id : label content]
         self.thchs30_label_dict, self.thchs30_label_ids = self.read_label(self.thchs30_dir)
         self.aishell_label_dict, self.aishell_label_ids = self.read_label(self.aishell_dir)
@@ -45,12 +45,14 @@ class get_data():
 
     # label到数字的映射,最好不要每次生成，尽量直接使用一个完整的拼音映射，这里就是固定死了
     def gen_label_dict(self):
-        label_dict=[]
-        with open('dict.txt','r') as file:
+        py2id={}
+        id2py={}
+        with open('/data/dataset/dict/py2id_dict.txt','r') as file:
             for line in file:
-                label,word=line.strip('\n').strip().split('\t')
-                label_dict.append(label)
-        return label_dict
+                py,idx=line.strip('\n').strip().split('\t')
+                py2id[py]=int(idx)
+                id2py[int(idx)]=py
+        return py2id,id2py
 
 
     # 读取标签，返回标签文件到对应字典
@@ -68,7 +70,7 @@ class get_data():
             # 通过字典将拼音标注转化为数字标注
             for label in cont_lb.split(' '):
                 try:
-                    cont_nu.append(self.label_dict.index(label))
+                    cont_nu.append(self.py2id[label])
                 except:
                     pass
             #cont_nu = [self.label_dict.index(label) for label in cont_lb.split(' ')]

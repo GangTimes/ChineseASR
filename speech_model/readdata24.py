@@ -11,11 +11,11 @@ from general_function.file_dict import *
 import random
 #import scipy.io.wavfile as wav
 from scipy.fftpack import fft
-
+from Base import Config
 class DataSpeech():
     
     
-    def __init__(self, path, type, LoadToMem = False, MemWavCount = 10000):
+    def __init__(self, type, LoadToMem = False, MemWavCount = 10000):
         '''
         初始化
         参数：
@@ -24,7 +24,7 @@ class DataSpeech():
         
         system_type = plat.system() # 由于不同的系统的文件路径表示不一样，需要进行判断
         
-        self.datapath = path; # 数据存放位置根目录
+        self.datapath = Config.data_dir # 数据存放位置根目录
         self.type = type # 数据类型，分为三种：训练集(train)、验证集(dev)、测试集(test)
         
         self.slash = ''
@@ -142,15 +142,7 @@ class DataSpeech():
         
         # 获取输出特征
         
-        feat_out=[]
-        #print("数据编号",n_start,filename)
-        for i in list_symbol:
-            if(''!=i):
-                n=self.SymbolToNum(i)
-                #v=self.NumToVector(n)
-                #feat_out.append(v)
-                feat_out.append(n)
-        #print('feat_out:',feat_out)
+        feat_out=[self.list_symbol[pny] if pny in self.list_symbol.keys() else self.list_symbol['_'] for pny in list_symbol if pny!='']
         
         # 获取输入特征
         data_input = GetFrequencyFeature3(wavsignal,fs)
@@ -226,18 +218,12 @@ class DataSpeech():
         加载拼音符号列表，用于标记符号
         返回一个列表list类型变量
         '''
-        txt_obj=open('dict.txt','r',encoding='UTF-8') # 打开文件并读入
-        txt_text=txt_obj.read()
-        txt_lines=txt_text.split('\n') # 文本分割
-        list_symbol=[] # 初始化符号列表
-        for i in txt_lines:
-            if(i!=''):
-                txt_l=i.split('\t')
-                list_symbol.append(txt_l[0])
-        txt_obj.close()
-        self.SymbolNum = len(list_symbol)
-        print(self.SymbolNum)
-        return list_symbol
+        py2id_dict={}
+        with open('/data/dataset/dict/py2id_dict.txt','r',encoding='UTF-8') as file:
+            for line in file:
+                py,idx=line.strip('\n').strip().split('\t')
+                py2id_dict[py]=int(idx)
+        return py2id_dict
 
     def GetSymbolNum(self):
         '''
@@ -245,13 +231,6 @@ class DataSpeech():
         '''
         return len(self.list_symbol)
         
-    def SymbolToNum(self,symbol):
-        '''
-        符号转为数字
-        '''
-        if(symbol != ''):
-            return self.list_symbol.index(symbol)
-        return self.SymbolNum
     
     def NumToVector(self,num):
         '''

@@ -6,9 +6,11 @@ import numpy as np
 import tensorflow as tf
 gpu_id='2'
 class Config:
-    data_path='data/zh.tsv'
-    hz2id_dict='data/hz2id.txt'
-    py2id_dict='data/py2id.txt'
+    train_path='/data/dataset/pinyin2hanzi/py2hz_train.tsv'
+    hz2id_dict='/data/dataset/dict/hz2id_dict.txt'
+    test_path='/data/dataset/pinyin2hanzi/py2hz_test.tsv'
+    dev_path='/data/dataset/pinyin2hanzi/py2hz_dev.tsv'
+    py2id_dict='/data/dataset/dict/py2id_dict.txt'
     model_dir='log/CBHG_model/'
     model_name='model'
     model_path=model_dir+model_name
@@ -46,15 +48,23 @@ def read_dict():
     return pny2idx,idx2pny,hanzi2idx,idx2hanzi
 
 
-def read_data():
+def read_data(type):
     """
     根据路径data_path读取中文文本到英文文本的对应关系  
     return: inputs->拼音->[[一句话的拼音列表],[]]  lables->汉字->[[一句话的汉字列表],[]]
     """
     inputs=[]
     labels=[]
-            
-    with open(Config.data_path,'r',encoding='utf-8') as file:
+    if type=='train':
+        data_path=Config.train_path
+    elif type=='test':
+        data_path=Config.test_path
+    elif type=='dev':
+        data_path=Config.dev_path
+    else:
+        raise Exception("Invalid type!", type)
+
+    with open(data_path,'r',encoding='utf-8') as file:
         for line in file:
             key,pny,hanzi=line.strip('\n').strip().split('\t')
             pnys=pny.strip().split(' ')
@@ -381,7 +391,8 @@ class Graph():
 
 
 def train():
-    inputs,labels=read_data()
+    inputs,labels=read_data('train')
+    dev_inputs,dev_labels=read_data('dev')
     g = Graph()
     config=tf.ConfigProto(log_device_placement=True)
     saver =tf.train.Saver()
@@ -395,6 +406,7 @@ def train():
         writer = tf.summary.FileWriter(Config.board_path, tf.get_default_graph())
         
         batch_num = len(inputs) // Config.batch_size
+        dev_num=len(dev_inputs)//Config.batch_size
         for k in range(Config.epochs):
             total_loss = 0
             batch = get_batch(inputs, labels)
@@ -406,6 +418,13 @@ def train():
                 if (k * batch_num + i) % 10 == 0:
                     rs=sess.run(merged, feed_dict=feed)
                     writer.add_summary(rs, k * batch_num + i)
+            dev_batch=get_batch(dev_inputs,labels)
+            for i in range(dev_num):
+                dev_inputs_batch,dev_labels_batch=next(dev_batch)
+                preds=sess.run(g.preds,{g.x:dev_inputs_batch})
+                
+
+            
             print('epochs', k+1, ': average loss = ', total_loss/batch_num)
             saver.save(sess,Config.model_path)
         writer.close()

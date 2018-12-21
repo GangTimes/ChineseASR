@@ -41,9 +41,8 @@ else:
     datapath = 'dataset'
     modelpath = modelpath + '/'
 
-ms = ModelSpeech(datapath)
-
-#ms.LoadModel(modelpath + 'speech_model251_e_0_step_327500.model')
-ms.TrainModel(datapath, epoch = 50, batch_size = 16, save_step = 500)
+ms = ModelSpeech()
+ms.LoadModel('model_speech/m251/speech_model251_e_0_step_99000.model')
+ms.TrainModel( epoch = 50, batch_size = 16, save_step = 500)
 
 
