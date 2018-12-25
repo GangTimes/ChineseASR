@@ -279,10 +279,13 @@ class ModelSpeech(): # 语音模型类
                     if(i % io_step_file == 0 or i == data_count - 1):
                         txt_obj.write(txt)
                         txt = ''
-                    
+                    pys=[data.id2py[idx] for idx in data_labels]
+                    pres=[data.id2py[idx] for idx in pre]
+                    pys=' '.join(pys)
+                    pres=' '.join(pres)
                     txt += str(i) + '\n'
-                    txt += 'True:\t' + str(data_labels) + '\n'
-                    txt += 'Pred:\t' + str(pre) + '\n'
+                    txt += 'True:\t' +pys + '\n'
+                    txt += 'Pred:\t' +pres+ '\n'
                     txt += '\n'
                     
                 
