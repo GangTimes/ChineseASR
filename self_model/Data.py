@@ -2,51 +2,44 @@
 # coding=utf-8
 
 import os
-class DataBase():
-    def __init__(self):
-        self.config()
+import random
+import numpy as np
+from Utils import compute_fbank
+class DataConfig():
+    base_dir='/data/dataset/'
+    data_names=['aishell','st-cmds','primewords','thchs30']
+    data_dirs={name:'/data/dataset/'+name+'/' for name in data_names}
+    wav2py_paths={}
+    types=['train','test','dev']
+    batch_size=16
+    for type in types:
+        temp={}
+        for name in ['syllabel','wav']:
+            temp[name]=type+'.'+name+'.txt' if name!='wav' else type+'.'+name+'.lst'
+        wav2py_paths[type]=temp
+    dict_dir=base_dir+'dict/'
+    py2id_dict=dict_dir+'py2id_dict.txt'
+    hz2id_dict=dict_dir+'hz2id_dict.txt'
+    py2hz_dict=dict_dir+'py2hz_dict.txt'
+    py2hz_dir=base_dir+'pinyin2hanzi/'
 
-    def config(self):
-        self.base_dir='/data/dataset/'
-        self.data_names=['aishell','st-cmds','primewords','thchs30']
-        self.data_dirs={name:'/data/dataset/'+name+'/' for name in self.data_names}
-        self.wav2py_paths={}
-        self.types=['train','test','dev']
-        self.batch_size=16
-        for type in self.types:
-            temp={}
-            for name in ['syllabel','wav']:
-                temp[name]=type+'.'+name+'.txt' if name!='wav' else type+'.'+name+'.lst'
-            self.wav2py_paths[type]=temp
-        self.dict_dir=self.base_dir+'dict/'
-        self.py2id_dict=self.dict_dir+'py2id_dict.txt'
-        self.hz2id_dict=self.dict_dir+'hz2id_dict.txt'
-        self.py2hz_dict=self.dict_dir+'py2hz_dict.txt'
-        
-        self.py2hz_dir=self.base_dir+'pinyin2hanzi/'
-        self.py2hz_paths={type:self.py2hz_dir+'py2hz_'+type+'.tsv' for type in self.types}
-        assert os.path.exists(self.py2hz_paths['train'])
-        print(self.py2hz_paths)
-    def create_dict(self):
-        self.py2id={}
-        self.id2py={}
-        self.hz2id={}
-        self.id2hz={}
-        with open(self.py2id_dict,'r',encoding='utf-8') as file:
-            for line in file:
-                py,idx=line.strip('\n').strip().split('\t')
-                self.py2id[py.strip()]=int(idx.strip())
-                self.id2py[int(idx.strip())]=py.strip()
-        with open(self.hz2id_dict,'r',encoding='utf-8') as file:
-            for line in file:
-                hz,idx=line.strip('\n').strip().split('\t')
-                self.hz2id[hz.strip()]=int(idx.strip())
-                self.id2hz[int(idx.strip())]=hz.strip()
+class ConfigSpeech(DataConfig):
+    output_size=1472
+    label_max_len=64
+    audio_len=1600
+    audio_feature_len=200
+    epochs=10
+    save_step=1000
+    batch_size=32
+    model_dir='models/speech_model/'
+    model_name='speechckpt'
+    model_path=model_dir+model_name
 
-
-class DataSpeech(DataBase):
+class DataSpeech(DataConfig):
     def __init__(self):
         super(DataSpeech,self).__init__()
+        self.create_dict()
+        self.create_wav2py()
     def create_wav2py(self):
         self.wav2py={}
         for _type,path in self.wav2py_paths.items():
@@ -66,37 +59,75 @@ class DataSpeech(DataBase):
                         id2py[idx.strip()]=pys
                 assert len(id2py)==len(id2wav)
                 for idx,key in enumerate(id2py.keys()):
-                    self.wav2py[_type][start_num+idx]={id2wav[key]:id2py[key]}
-                start_num=len(self.wav2py[_type]) 
-                print(_type+':'+str(start_num))                    
-                
-        print(self.wav2py['train'][1])
-    def create_batch(selfi,flag='train',shuffle=True):
+                    self.wav2py[_type][start_num+idx]=(id2wav[key],id2py[key])
+                start_num=len(self.wav2py[_type])
+                print(_type+':'+str(start_num))
+
+    def create_batch(self,flag='train',shuffle=True):
         data_num=len(self.wav2py[flag])
+
+        idxs=list(range(data_num))
         if shuffle:
-            idxs=random.shuffle(list(range(data_num)))
-        else:
-            idxs=list(range(data_num))
+            random.shuffle(idxs)
         wavs=[]
         labels=[]
-        for i,idx in enumerte(idxs):
-            wav_path,pys=self.wav2py[flag][idx].items()
+        for i,idx in enumerate(idxs):
+            wav_path,pys=self.wav2py[flag][idx]
             fbank=compute_fbank(wav_path)
             pad_fbank=np.zeros((fbank.shape[0]//8*8+8,fbank.shape[1]))
             pad_fbank[:fbank.shape[0],:]=fbank
+            print(pad_fbank.shape)
             label=[self.py2id[py] for py in pys]
             assert len(wavs)==len(labels)
             if len(wavs)==self.batch_size:
-                yield wavs,labels
+                the_inputs,input_length=self.wav_padding(wavs)
+                the_labels,label_length=self.label_padding(labels)
+                inputs={'the_inputs':the_inputs,"the_labels":the_labels,"input_length":input_length,"label_length":label_length}
+                outputs={'ctc':np.zeros(the_inputs.shape[0])}
+                yield inputs,outputs
                 wavs,labels=[],[]
             wavs.append(pad_fbank)
             labels.append(label)
         if len(wavs)!=0:
-            yield wavs,labels
-            
-class DataLanguage(DataBase):
+            the_inputs,input_length=self.wav_padding(wavs)
+            the_labels,label_length=self.label_padding(labels)
+            inputs={'the_inputs':the_inputs,"the_labels":the_labels,"input_length":input_length,"label_length":label_length}
+            outputs={'ctc':np.zeros(the_inputs.shape[0])}
+            yield inputs,outputs
+
+    def wav_padding(self,wavs):
+        wav_lens=[len(wav) for wav in wavs]
+        max_len=max(wav_lens)
+        wav_lens=np.array([leng//8 for leng in wav_lens])
+        new_wavs=np.zeros((len(wavs),max_len,200,1))
+        for i in range(len(wavs)):
+            new_wavs[i,:wavs[i].shape[0],:,0]=wavs[i]
+        return new_wavs,wav_lens
+
+    def label_padding(self,labels):
+        label_lens=np.array([len(label) for label in labels])
+        max_len=max(label_lens)
+        new_labels=np.zeros((len(labels),max_len))
+        for i in range(len(labels)):
+            new_labels[i,:len(labels[i])]=labels[i]
+        return new_labels,label_lens
+    def create_dict(self):
+        self.py2id={}
+        self.id2py={}
+        with open(self.py2id_dict,'r',encoding='utf-8') as file:
+            for line in file:
+                py,idx=line.strip('\n').strip().split('\t')
+                self.py2id[py.strip()]=int(idx.strip())
+                self.id2py[int(idx.strip())]=py.strip()
+
+
+
+class DataLanguage(DataConfig):
     def __init__(self):
         super(DataLanguage,self).__init__()
+        self.py2hz_paths={type:self.py2hz_dir+'py2hz_'+type+'.tsv' for type in self.types}
+        self.create_dict()
+        self.create_py2hz()
     def create_py2hz(self):
         self.py2hz={}
         for _type,path in self.py2hz_paths.items():
@@ -110,17 +141,46 @@ class DataLanguage(DataBase):
                     self.py2hz[_type][start_num]=(pys,hzs)
                     start_num+=1
                 print(_type+':'+str(start_num))
-        print(self.py2hz['train'][1])
-    def create_batch(selfi,flag='train',shuffle=True):
+    def create_batch(self,flag='train',shuffle=True):
         data_num=len(self.py2hz[flag])
+        idxs=list(range(data_num))
         if shuffle:
-            idxs=random.shuffle(list(range(data_num)))
-        else:
-            idxs=list(range(data_num))
-        for i,idx in enumerte(idxs):
-            fbank=compute_fbank(self.py2hz)
+            random.shuffle(idxs)
+        pys=[]
+        hzs=[]
+        for i,idx in enumerate(idxs):
+            py,hz=self.py2hz[flag][idx]
+            py=[self.py2id[p] for p in py]
+            hz=[self.hz2id[h] for h in hz]
+            assert len(pys)==len(hzs)
+            if len(pys)==self.batch_size:
+                yield pys,hzs
+                pys,hzs=[],[]
+            pys.append(py)
+            hzs.append(hz)
+        if len(pys)!=0:
+            yield pys,hzs
+    def create_dict(self):
+        self.py2id={}
+        self.id2py={}
+        self.id2hz={}
+        self.hz2id={}
+        with open(self.py2id_dict,'r',encoding='utf-8') as file:
+            for line in file:
+                py,idx=line.strip('\n').strip().split('\t')
+                self.py2id[py.strip()]=int(idx.strip())
+                self.id2py[int(idx.strip())]=py.strip()
+        with open(self.hz2id_dict,'r',encoding='utf-8') as file:
+            for line in file:
+                hz,idx=line.strip('\n').strip().split('\t')
+                self.hz2id[hz.strip()]=int(idx.strip())
+                self.id2hz[int(idx.strip())]=hz.strip()
 
-
-if __name__=="__main__":
+def main():
     data=DataLanguage()
-    data.create_py2hz()
+    batch=data.create_batch()
+    for b in batch:
+        print(b)
+        break
+if __name__=="__main__":
+    main()
