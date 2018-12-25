@@ -211,7 +211,7 @@ if __name__ == '__main__':
     if run_type == 'test':
         test_batch()
     elif run_type == 'train':
-        for x in range(100):
+        for x in range(1000):
             train()
             print('there is ', x, 'epochs')
             test()

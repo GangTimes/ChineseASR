@@ -46,7 +46,7 @@ class DataSpeech():
         self.dic_symbollist_stcmds = {}
         
         self.SymbolNum = 0 # 记录拼音符号数量
-        self.list_symbol = self.GetSymbolList() # 全部汉语拼音符号列表
+        self.list_symbol,self.id2py = self.GetSymbolList() # 全部汉语拼音符号列表
         self.list_wavnum=[] # wav文件标记列表
         self.list_symbolnum=[] # symbol标记列表
         
@@ -219,11 +219,13 @@ class DataSpeech():
         返回一个列表list类型变量
         '''
         py2id_dict={}
+        id2py_dict={}
         with open('/data/dataset/dict/py2id_dict.txt','r',encoding='UTF-8') as file:
             for line in file:
                 py,idx=line.strip('\n').strip().split('\t')
                 py2id_dict[py]=int(idx)
-        return py2id_dict
+                id2py_dict[int(idx)]=py
+        return py2id_dict,id2py_dict
 
     def GetSymbolNum(self):
         '''

@@ -15,7 +15,7 @@ from keras.backend.tensorflow_backend import set_session
 from SpeechModel251 import ModelSpeech
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 #进行配置，使用90%的GPU
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.9
@@ -42,11 +42,11 @@ else:
 	datapath = 'dataset'
 	modelpath = modelpath + '/'
 
-ms = ModelSpeech(datapath)
+ms = ModelSpeech()
 
-ms.LoadModel(modelpath + 'm251/speech_model251_e_0_step_12000.model')
+ms.LoadModel(modelpath + '/m251/ckpt.model')
 
-ms.TestModel(datapath, str_dataset='test', data_count = 128, out_report = True)
+ms.TestModel( str_dataset='test', data_count = 128, out_report = True)
 
 #r = ms.RecognizeSpeech_FromFile('E:\\语音数据集\\ST-CMDS-20170001_1-OS\\20170001P00241I0053.wav')
 #r = ms.RecognizeSpeech_FromFile('E:\\语音数据集\\ST-CMDS-20170001_1-OS\\20170001P00020I0087.wav')

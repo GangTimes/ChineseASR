@@ -431,7 +431,7 @@ def train():
 
 def test():
     Config.is_training=False
-    _,_=read_data()
+    _,_=read_data('train')
     pny2id,id2pny,han2id,id2han=read_dict()
     g=Graph()
     config=tf.ConfigProto(log_device_placement=True)
