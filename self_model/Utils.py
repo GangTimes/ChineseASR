@@ -41,3 +41,15 @@ def compute_fbank(file):
 	#print(data_input.shape)
 	data_input = np.log(data_input + 1)
 	return data_input
+import difflib
+def get_edit_distance(label,pred):
+    leven_cost=0
+    s=difflib.SequenceMatcher(None,label,pred)
+    for tag,i1,i2,j1,j2 in s.get_opcodes():
+        if tag=='replace':
+            leven_cost+=max(i2-i1,j2-j1)
+        elif tag=='insert':
+            leven_cost+=(j2-j1)
+        elif tag=='delete':
+            leven_cost+=(i2-i1)
+        return leven_cost

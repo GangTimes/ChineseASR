@@ -11,7 +11,6 @@ class DataConfig():
     data_dirs={name:'/data/dataset/'+name+'/' for name in data_names}
     wav2py_paths={}
     types=['train','test','dev']
-    batch_size=16
     for type in types:
         temp={}
         for name in ['syllabel','wav']:
@@ -30,18 +29,19 @@ class ConfigSpeech(DataConfig):
     audio_feature_len=200
     epochs=10
     save_step=1000
-    batch_size=32
+    batch_size=16
     model_dir='models/speech_model/'
     model_name='speechckpt'
     model_path=model_dir+model_name
 
-class DataSpeech(DataConfig):
+class DataSpeech(ConfigSpeech):
     def __init__(self):
         super(DataSpeech,self).__init__()
         self.create_dict()
         self.create_wav2py()
     def create_wav2py(self):
         self.wav2py={}
+        self.batch_num={}
         for _type,path in self.wav2py_paths.items():
             self.wav2py[_type]={}
             start_num=0
@@ -61,11 +61,11 @@ class DataSpeech(DataConfig):
                 for idx,key in enumerate(id2py.keys()):
                     self.wav2py[_type][start_num+idx]=(id2wav[key],id2py[key])
                 start_num=len(self.wav2py[_type])
-                print(_type+':'+str(start_num))
+            batch_num=start_num //self.batch_size
+            self.batch_num[_type]=batch_num if start_num%self.batch_size==0 else batch_num+1
 
     def create_batch(self,flag='train',shuffle=True):
         data_num=len(self.wav2py[flag])
-
         idxs=list(range(data_num))
         if shuffle:
             random.shuffle(idxs)
@@ -74,9 +74,7 @@ class DataSpeech(DataConfig):
         for i,idx in enumerate(idxs):
             wav_path,pys=self.wav2py[flag][idx]
             fbank=compute_fbank(wav_path)
-            pad_fbank=np.zeros((fbank.shape[0]//8*8+8,fbank.shape[1]))
-            pad_fbank[:fbank.shape[0],:]=fbank
-            print(pad_fbank.shape)
+            pad_fbank=fbank[:fbank.shape[0]//8*8,:]
             label=[self.py2id[py] for py in pys]
             assert len(wavs)==len(labels)
             if len(wavs)==self.batch_size:
@@ -99,7 +97,7 @@ class DataSpeech(DataConfig):
         wav_lens=[len(wav) for wav in wavs]
         max_len=max(wav_lens)
         wav_lens=np.array([leng//8 for leng in wav_lens])
-        new_wavs=np.zeros((len(wavs),max_len,200,1))
+        new_wavs=np.zeros((len(wavs),max_len,self.audio_feature_len,1))
         for i in range(len(wavs)):
             new_wavs[i,:wavs[i].shape[0],:,0]=wavs[i]
         return new_wavs,wav_lens
@@ -177,7 +175,7 @@ class DataLanguage(DataConfig):
                 self.id2hz[int(idx.strip())]=hz.strip()
 
 def main():
-    data=DataLanguage()
+    data=DataSpeech()
     batch=data.create_batch()
     for b in batch:
         print(b)

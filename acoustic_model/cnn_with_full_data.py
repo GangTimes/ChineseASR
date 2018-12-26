@@ -72,7 +72,7 @@ def creatModel():
     layer_h11 = Conv2D(128, (3,3), use_bias=True, activation='relu', padding='same', kernel_initializer='he_normal')(layer_h10)
     layer_h11 = BatchNormalization(axis=-1)(layer_h11)
     # Reshape层
-    layer_h12 = Reshape((250, 3200))(layer_h11) 
+    layer_h12 = Reshape((250, 3200))(layer_h11)
     # 全连接层
     layer_h13 = Dense(256, activation="relu", use_bias=True, kernel_initializer='he_normal')(layer_h12)
     layer_h13 = BatchNormalization(axis=1)(layer_h13)
@@ -90,7 +90,7 @@ def creatModel():
     # clipnorm seems to speeds up convergence
     #sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
     #ada_d = Adadelta(lr = 0.01, rho = 0.95, epsilon = 1e-06)
-    #rms = RMSprop(lr=0.01,rho=0.9,epsilon=1e-06)       
+    #rms = RMSprop(lr=0.01,rho=0.9,epsilon=1e-06)
     opt = Adam(lr = 0.01, beta_1 = 0.9, beta_2 = 0.999, decay = 0.0, epsilon = 10e-8)
     #ada_d = Adadelta(lr=0.01, rho=0.95, epsilon=1e-06)
     #model=multi_gpu_model(model,gpus=2)
@@ -126,8 +126,8 @@ def decode_ctc(num_result, num2word):
 # -----------------------------------------------------------------------------------------------------
 # 训练模型
 def train(datapath = '/data/dataset/',
-        batch_size = 2, 
-        steps_per_epoch = 1000, 
+        batch_size = 2,
+        steps_per_epoch = 1000,
         epochs = 1):
     # 准备训练所需数据
     p = get_data(datapath = datapath, read_type = 'train', batch_size = batch_size)
@@ -165,7 +165,7 @@ def test(datapath = '/data/dataset/',
 
 
 # 测试模型，测试多条语音数据，输出识别率
-# 通过batch_size和steps来增减训练数据大小，batch_size * steps < 数据量 test 16744|dev 20865 
+# 通过batch_size和steps来增减训练数据大小，batch_size * steps < 数据量 test 16744|dev 20865
 def test_batch(datapath = '/data/dataset/',
         batch_size = 4):
     # 准备测试数据，以及生成字典
@@ -174,7 +174,7 @@ def test_batch(datapath = '/data/dataset/',
     yielddatas = p.data_generator()
     # 载入训练好的模型，并进行识别
     model, model_data = creatModel()
-    
+
         #model.load_weights('model_cnn_full.mdl')
     # 通过修改steps增减测试数据
     result = model_data.predict_generator(yielddatas, steps=2)
