@@ -48,7 +48,7 @@ def check_label(pys,wav_path):
             file.write(wav_path+'\n')
 def check_input(wav_path,label):
     fbank=extract_feature(wav_path)
-    if (fbank.shape[0]//8)<config.label_len:
+    if (fbank.shape[0]//8)<len(label):
         with open('log/check_input.txt','+a') as file:
             file.write(wav_path+'\t'+'fbank_len:'+str(fbank.shape[0])+'\tinput_len'+str(fbank.shape[0]//8)+'\tlabel_len'+str(len(label))+'\n')
 def report_data(wav_path,label):
@@ -61,9 +61,9 @@ def main():
     for _type in config.types:
         for idx in tqdm(range(len(wav2py[_type]))):
             wav_path,pys=wav2py[_type][idx]
-            report_data(wav_path,pys)
+            #report_data(wav_path,pys)
             #check_audio(wav_path)
             #check_label(pys,wav_path)
-            #check_input(wav_path,pys)
+            check_input(wav_path,pys)
 if __name__=="__main__":
     main()

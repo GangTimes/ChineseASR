@@ -7,6 +7,9 @@ import numpy as np
 from Utils import extract_feature
 class DataConfig():
     base_dir='/data/dataset/'
+    test_dir='/data/dataset/test_wav/'
+    test_name='D4_812.wav'
+    test_path=test_dir+test_name
     data_names=['st-cmds','thchs30']
     data_dirs={name:'/data/dataset/'+name+'/' for name in data_names}
     wav2py_paths={}
@@ -32,7 +35,7 @@ class ConfigSpeech(DataConfig):
     batch_size=16
     dev_num=10
     train_num=100
-    model_dir='models/speech_model/fix/'
+    model_dir='models/speech_model/raw/'
     model_name='speech.model'
     model_path=model_dir+model_name
     log_dir='log/'
@@ -139,14 +142,17 @@ class DataSpeech(ConfigSpeech):
                 py,idx=line.strip('\n').strip().split('\t')
                 self.py2id[py.strip()]=int(idx.strip())
                 self.id2py[int(idx.strip())]=py.strip()
-
+    def create_online(self,wav_path):
+        assert os.path.exists(wav_path)
+        fbank=extract_feature(wav_path)
+        assert fbank.shape[0]<self.audio_len
+        wav,wav_len=self.wav_padding([fbank])
+        yield wav,wav_len
 
 def main():
     data=DataSpeech()
-    data_iters=data.create_batch()
-    for batch in data_iters:
-        x,y=batch
-        print(x[0].shape,x[1].shape,x[2].shape,x[3].shape,y.shape)
-
+    batch=data.create_online(data.test_path)
+    x,y=next(batch)
+    print(x.shape,y)
 if __name__=="__main__":
     main()

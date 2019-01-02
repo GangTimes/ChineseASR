@@ -105,7 +105,6 @@ def main():
     data_iters=data.create_batch()
     for batch in data_iters:
         x,y=batch
-        print(x[0].shape,x[1].shape,x[2],x[3])
 
 if __name__=="__main__":
     main()

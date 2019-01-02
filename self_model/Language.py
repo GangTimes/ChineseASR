@@ -234,6 +234,7 @@ class ModelLanguage(DataLanguage):
     '''Builds a model graph'''
 
     def __init__(self):
+        super(ModelLanguage,self).__init__()
         tf.reset_default_graph()
         self.x = tf.placeholder(tf.int32, shape=(None, None))
         self.y = tf.placeholder(tf.int32, shape=(None, None))
@@ -289,8 +290,9 @@ class ModelLanguage(DataLanguage):
             self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
             self.train_op = self.optimizer.minimize(self.mean_loss, global_step=self.global_step)
 
-
-
+    def hz_decode(self,preds):
+        hzs=[self.id2hz[preds[0,i]] for i in range(preds.shape[1])]
+        return hzs
 def train(model=None,data=None):
     if model==None:
         model=ModelLanguage()
@@ -332,7 +334,7 @@ def evaluate(sess,model,data=None):
         feed={model.x:input_batch,model.y:label_batch}
         acc= sess.run(model.acc, feed_dict=feed)
         total_acc+=acc
-    print("验证accuracy:{.2f}".format(total_acc/data.batch_num['dev']))
+        print("验证accuracy:{:.2f}".format(total_acc/data.batch_num['dev']))
 
 def test():
     pass
