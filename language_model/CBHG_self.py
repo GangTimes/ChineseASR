@@ -42,7 +42,7 @@ def read_dict():
             pny,idx=line.strip('\n').split('\t')
             pny2idx[pny]=int(idx.strip())
             idx2pny[int(idx.strip())]=pny.strip()
-        
+
     Config.pny_size=len(pny2idx)
     Config.hanzi_size=len(hanzi2idx)
     return pny2idx,idx2pny,hanzi2idx,idx2hanzi
@@ -50,7 +50,7 @@ def read_dict():
 
 def read_data(type):
     """
-    根据路径data_path读取中文文本到英文文本的对应关系  
+    根据路径data_path读取中文文本到英文文本的对应关系
     return: inputs->拼音->[[一句话的拼音列表],[]]  lables->汉字->[[一句话的汉字列表],[]]
     """
     inputs=[]
@@ -69,11 +69,11 @@ def read_data(type):
             key,pny,hanzi=line.strip('\n').strip().split('\t')
             pnys=pny.strip().split(' ')
             hanzis=hanzi.strip().split(' ')
-            
+
             assert len(pnys)==len(hanzis)
             inputs.append(pnys)
             labels.append(hanzis)
-        
+
     pny2idx,idx2pny,hanzi2idx,idx2hanzi=read_dict()
     input_num = [[pny2idx[pny] for pny in line ] for line in inputs]
     label_num = [[hanzi2idx[han] for han in line] for line in labels]
@@ -135,7 +135,7 @@ def conv1d(inputs,filters=None, size=1,rate=1, padding="SAME",use_bias=False,act
 
     Returns:
       A masked tensor of the same shape and dtypes as `inputs`.
-    '''    
+    '''
     with tf.variable_scope(scope):
         if padding.lower() == "causal":
             # pre-padding for causality
@@ -329,10 +329,10 @@ class Graph():
         self.num_highwaynet_blocks = Config.num_highwaynet_blocks
         self.encoder_num_banks = Config.encoder_num_banks
         self.lr = Config.lr
-        
+
         self.x = tf.placeholder(tf.int32, shape=(None, None))
         self.y = tf.placeholder(tf.int32, shape=(None, None))
-        
+
         # Character Embedding for x
 
         enc = embed(self.x, self.pny_size, self.embed_size, scope="emb_x")
@@ -404,7 +404,7 @@ def train():
             print("正在恢复模型")
             saver.restore(sess, ckpt)
         writer = tf.summary.FileWriter(Config.board_path, tf.get_default_graph())
-        
+
         batch_num = len(inputs) // Config.batch_size
         dev_num=len(dev_inputs)//Config.batch_size
         for k in range(Config.epochs):
@@ -422,9 +422,9 @@ def train():
             for i in range(dev_num):
                 dev_inputs_batch,dev_labels_batch=next(dev_batch)
                 preds=sess.run(g.preds,{g.x:dev_inputs_batch})
-                
 
-            
+
+
             print('epochs', k+1, ': average loss = ', total_loss/batch_num)
             saver.save(sess,Config.model_path)
         writer.close()
@@ -453,5 +453,5 @@ def test():
 
 
 if __name__=="__main__":
-    #train()
-    test()
+    train()
+    #test()
