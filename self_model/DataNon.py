@@ -85,14 +85,13 @@ class DataSpeech(ConfigSpeech):
                 the_inputs,input_length=self.wav_padding(wavs)
                 the_labels,label_length=self.label_padding(labels)
                 for i in range(self.batch_size):
-                    if input_length[i]>=max(label_length):
-                        r=random.randint()
-                        while r==i:
-                            r=random.randint()
+                    while input_length[i]<=max(label_length):
+                        r=random.randint(1,self.batch_size-1)
                         the_inputs[i]=the_inputs[r]
                         the_labels[i]=the_labels[r]
                         input_length[i]=input_length[r]
                         label_length[i]=label_length[r]
+                assert min(input_length)>max(label_length),str(min(input_length))+":"+str(max(label_length))
                 inputs=[the_inputs,the_labels,input_length,label_length]
                 outputs=np.zeros([self.batch_size,1],dtype=np.float32)
                 yield inputs,outputs
@@ -102,7 +101,7 @@ class DataSpeech(ConfigSpeech):
     def wav_padding(self,wavs):
         wav_lens=[wav.shape[0] for wav in wavs]
         max_len=max(wav_lens)
-        wav_lens=np.array([leng//8 for leng in wav_lens],dtype=np.int16).T
+        wav_lens=np.array([leng//8 for leng in wav_lens],dtype=np.int16)
         new_wavs=np.zeros((len(wavs),max_len,self.audio_feature_len,1))
         for i in range(len(wavs)):
             wav=wavs[i][:wavs[i].shape[0]//8*8,:]

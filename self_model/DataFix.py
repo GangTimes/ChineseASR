@@ -7,8 +7,8 @@ import numpy as np
 from Utils import extract_feature
 class DataConfig():
     base_dir='/data/dataset/'
-    test_dir='/data/dataset/test_wav/'
-    test_name='D4_812.wav'
+    test_dir='/data/dataset/data_thchs30/test/'
+    test_name='D4_822.wav'
     test_path=test_dir+test_name
     data_names=['st-cmds','thchs30']
     data_dirs={name:'/data/dataset/'+name+'/' for name in data_names}
@@ -35,7 +35,7 @@ class ConfigSpeech(DataConfig):
     batch_size=16
     dev_num=10
     train_num=100
-    model_dir='models/speech_model/raw/'
+    model_dir='models/speech_model/fix/'
     model_name='speech.model'
     model_path=model_dir+model_name
     log_dir='log/'

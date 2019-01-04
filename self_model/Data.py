@@ -4,40 +4,29 @@
 import os
 import random
 import numpy as np
-from Utils import compute_fbank
 class DataConfig():
     base_dir='/data/dataset/'
-    data_names=['aishell','st-cmds','primewords','thchs30']
-    data_dirs={name:'/data/dataset/'+name+'/' for name in data_names}
-    wav2py_paths={}
-    types=['train','test','dev']
-    for type in types:
-        temp={}
-        for name in ['syllabel','wav']:
-            temp[name]=type+'.'+name+'.txt' if name!='wav' else type+'.'+name+'.lst'
-        wav2py_paths[type]=temp
     dict_dir=base_dir+'dict/'
     py2id_dict=dict_dir+'py2id_dict.txt'
     hz2id_dict=dict_dir+'hz2id_dict.txt'
     py2hz_dict=dict_dir+'py2hz_dict.txt'
     py2hz_dir=base_dir+'pinyin2hanzi/'
-
+    types=['train','test','dev']
 class ConfigLanguage(DataConfig):
     epochs=100
-    model_dir='models/language_model/'
-    model_name='languageckpt'
+    model_dir='models/language_model/new/'
+    model_name='model'
     model_path=model_dir+model_name
     embed_size=300
     num_hb=4
     num_eb=16
-    lr=0.001
+    norm_type='bn'
+    lr=0.0001
     is_training=True
     batch_size=256
     py_size=1472
     hz_size=7459
-    lr=0.0001
-    max_len=50
-    min_len=4
+    dropout_rate=0.5
 class DataLanguage(ConfigLanguage):
     def __init__(self):
         super(DataLanguage,self).__init__()
@@ -77,7 +66,11 @@ class DataLanguage(ConfigLanguage):
                 pys,hzs=[],[]
             pys.append(py)
             hzs.append(hz)
-
+    def create_online(self,text):
+        pred=[self.py2id[py] for py in text]
+        pred=np.array(pred)
+        pred=pred.reshape((1,pred.shape[0]))
+        return pred
     def seq_pad(self,pys,hzs):
         max_len=max([len(py) for py in pys])
         inputs=np.array([line+[0]*(max_len-len(line)) for line in pys])
@@ -103,8 +96,11 @@ class DataLanguage(ConfigLanguage):
 def main():
     data=DataLanguage()
     data_iters=data.create_batch()
+
     for batch in data_iters:
         x,y=batch
+        print(x,'\n',y)
+
 
 if __name__=="__main__":
     main()
