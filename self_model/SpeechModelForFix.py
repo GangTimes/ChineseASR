@@ -153,6 +153,6 @@ def main():
     data=DataSpeech()
     if os.path.exists(data.model_path):
         model.ctc_model.load_weights(data.model_path)
-    evaluate(model,data)
+    train(model,data)
 if __name__=="__main__":
     main()

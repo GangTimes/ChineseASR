@@ -97,7 +97,11 @@ def evaluate(model,data=None):
     for i in tqdm(range(config.dev_num)):
         batch=next(data_iters)
         results=model.predict_model.predict_on_batch(batch[0][0])
-        for result,label in zip(results,batch[0][1]):
+        for ix in range(len(results)):
+            result=results[ix]
+            label_len=batch[0][3][ix]
+            label=batch[0][1][ix,:]
+            label=[label[l] for l in range(label_len)]
             result=result.reshape((1,result.shape[0],result.shape[1]))
             pre,text=model.decode_ctc(result)
             word_num=len(label)
