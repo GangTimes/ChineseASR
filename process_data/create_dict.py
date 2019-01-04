@@ -16,14 +16,14 @@ def scan_dict():
     with open('/data/dataset/dict/raw_dict.txt','r',encoding='utf-8') as file:
         for line in file:
             py,hanzis=line.strip('\n').strip().split('\t')
-            hanzis=[hanzi.strip() for hanzi in hanzis.split(' ')]
+            hanzis=[hanzi.strip() for hanzi in list(hanzis.strip())]
             if py not in pnys_list:pnys_list.append(py)
             hanzis_list+=[hanzi for hanzi in hanzis if hanzi not in hanzis_list]
     pnys_list=list(set(pnys_list))
     hanzis_list=list(set(hanzis_list))
     pnys_list=['<PAD>']+pnys_list+['-']
     hanzis_list=['<PAD>']+hanzis_list+['-']
-    
+
     with open('/data/dataset/dict/py2id_dict.txt','w',encoding='utf-8') as file:
         for idx,pny in enumerate(pnys_list):
             file.write(pny+'\t'+str(idx)+'\n')
@@ -47,7 +47,7 @@ def scan_py2hz():
     with open('/data/dataset/dict/raw_dict.txt','r',encoding='utf-8') as file:
         for line in file:
             py,hanzis=line.strip('\n').strip().split('\t')
-            hanzis=[hanzi.strip() for hanzi in hanzis.split(' ')]
+            hanzis=[hanzi.strip() for hanzi in list(hanzis.strip())]
             if py in py2hz.keys():
                 py2hz[py]+=hanzis
             else:
