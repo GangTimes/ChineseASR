@@ -1,11 +1,11 @@
 import numpy as np
 import tensorflow as tf
 import os
-from DataFix import DataSpeech
-from DataFix import ConfigSpeech as sconfig
-from SpeechModelForFix import ModelSpeech
-from SpeechModelForFix import train as strain
-from SpeechModelForFix import evaluate as sevaluate
+from DataNon import DataSpeech
+from DataNon import ConfigSpeech as sconfig
+from SpeechModelForNon import ModelSpeech
+from SpeechModelForNon import train as strain
+from SpeechModelForNon import evaluate as sevaluate
 
 from CBHG_self import read_dict,read_data,Graph
 from CBHG_self import Config as lconfig

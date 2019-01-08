@@ -11,8 +11,8 @@ from Language import ModelLanguage
 from Language import train as ltrain
 from Language import evaluate as sevaluate
 
-from Data import ConfigLanguage as lconfig
-from Data import DataLanguage
+from DataCBHG import ConfigLanguage as lconfig
+from DataCBHG import DataLanguage
 
 def read_wav(file_path):
     pass
@@ -29,22 +29,6 @@ def speech_online(wav_path):
     pred,text=model.decode_ctc(result)
     return pred,text
 
-def language_online(pred):
-    model=ModelLanguage()
-    saver=tf.train.Saver()
-    pred=np.array(pred)
-    pred=pred.reshape((1,pred.shape[0]))
-    with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
-        sess.run(tf.global_variables_initializer())
-        ckpt=tf.train.latest_checkpoint(lconfig.model_dir)
-        if ckpt!=None:
-            print("正在恢复模型")
-            saver.restore(sess,ckpt)
-            feed={model.x:pred}
-            predid=sess.run(model.preds,feed_dict=feed)
-            hzs=model.hz_decode(predid)
-    text=''.join(hzs)
-    return text
 
 def merge_online():
     lconfig.is_training=False
@@ -62,10 +46,11 @@ def merge_online():
                     print(wav_path+' 不存在')
                     continue
                 pred,text=speech_online(wav_path)
-                pys=lmodel.create_online(text)
-                feed={lmodel.x:pys}
+                pred=pred.reshape(1,-1)
+                feed={lmodel.x:pred}
+                print(lmodel.is_training)
                 predid=sess.run(lmodel.preds,feed_dict=feed)
-                hzs=lmodel.hz_decode(predid)
+                hzs=[lmodel.id2hz[idx] for idx in predid[0]]
                 print(' '.join(text)+'\n')
                 print(''.join(hzs)+'\n')
 
