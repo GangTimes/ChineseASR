@@ -1,11 +1,11 @@
 import numpy as np
 import tensorflow as tf
 import os
-from DataFix import DataSpeech
-from DataFix import ConfigSpeech as sconfig
-from SpeechModelForFix import ModelSpeech
-from SpeechModelForFix import train as strain
-from SpeechModelForFix import evaluate as sevaluate
+from DataNon import DataSpeech
+from DataNon import ConfigSpeech as sconfig
+from SpeechModelForNon import ModelSpeech
+from SpeechModelForNon import train as strain
+from SpeechModelForNon import evaluate as sevaluate
 
 from Language import ModelLanguage
 from Language import train as ltrain
@@ -60,6 +60,7 @@ def merge_online():
                 if wav_path=='exit':break
                 if not os.path.exists(wav_path):
                     print(wav_path+' 不存在')
+                    continue
                 pred,text=speech_online(wav_path)
                 pys=lmodel.create_online(text)
                 feed={lmodel.x:pys}

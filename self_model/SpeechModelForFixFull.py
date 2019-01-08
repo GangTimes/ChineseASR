@@ -90,7 +90,7 @@ class ModelSpeech(DataSpeech): # 语音模型类
         return rv,text
 def evaluate(model,data=None):
     if data==None:
-        data=DataSpeech(fix=True)
+        data=DataSpeech()
     data_iters=data.create_batch('dev',False)
     word_total=0
     word_error_num=0
@@ -99,7 +99,7 @@ def evaluate(model,data=None):
         results=model.predict_model.predict_on_batch(batch[0][0])
         for ix in range(len(results)):
             result=results[ix]
-            label_len=batch[0][3][ix]
+            label_len=batch[0][3][ix,0]
             label=batch[0][1][ix,:]
             label=[label[l] for l in range(label_len)]
             result=result.reshape((1,result.shape[0],result.shape[1]))
@@ -154,6 +154,6 @@ def main():
     data=DataSpeech()
     if os.path.exists(data.model_path):
         model.ctc_model.load_weights(data.model_path)
-    evaluate(model,data)
+    train(model,data)
 if __name__=="__main__":
     main()

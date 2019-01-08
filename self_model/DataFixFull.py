@@ -4,7 +4,7 @@
 import os
 import random
 import numpy as np
-from Utils import compute_fbank
+from Utils import extract_feature
 from keras.preprocessing.sequence import pad_sequences
 class DataConfig():
     base_dir='/data/dataset/'
@@ -33,8 +33,8 @@ class ConfigSpeech(DataConfig):
     batch_size=16
     dev_num=10
     train_num=100
-    model_dir='models/speech_model/fix/'
-    model_name='speechfull.model'
+    model_dir='models/speech_model/fixfull/'
+    model_name='speech.model'
     model_path=model_dir+model_name
     log_dir='log/'
     log_name='speechfixfull.txt'
@@ -70,6 +70,7 @@ class DataSpeech(ConfigSpeech):
             batch_num=start_num //self.batch_size
             self.batch_num[_type]=batch_num if start_num%self.batch_size==0 else batch_num+1
 
+
     def create_batch(self,flag='train',shuffle=True):
         data_num=len(self.wav2py[flag])
         idxs=list(range(data_num))
@@ -77,49 +78,50 @@ class DataSpeech(ConfigSpeech):
             random.shuffle(idxs)
         wavs=[]
         labels=[]
-        label_lengths=[]
-        input_lengths=[]
         for i,idx in enumerate(idxs):
             wav_path,pys=self.wav2py[flag][idx]
-            fbank=compute_fbank(wav_path)
-            label=[self.py2id[py] for py in pys]
-            while((fbank.shape[1]>=self.audio_len ) or (len(label)>=self.label_len)):
+            fbank=extract_feature(wav_path)
+            label=np.array([self.py2id[py] for py in pys])
+            while((fbank.shape[0]>=self.audio_len ) or (len(label)>=self.label_len)):
                 temp=random.randint(len(idxs)//4,len(idxs)//2)
                 wav_path,pys=self.wav2py[flag][temp]
-                fbank=compute_fbank(wav_path)
-                label=[self.py2id[py] for py in pys]
+                fbank=extract_feature(wav_path)
+                label=np.array([self.py2id[py] for py in pys],dtype=np.int32)
 
             assert len(wavs)==len(labels)
             if len(wavs)==self.batch_size:
-                wavs=np.array(wavs)
-                the_inputs=np.expand_dims(wavs,axis=4)
-                the_inputs=wavs.transpose((0,2,1,3))
-                the_labels=np.array(labels)
-                input_lengths=np.array(input_lengths)
-                label_lengths=np.array(label_lengths)
-                inputs=[the_inputs,the_labels,input_lengths,label_lengths]
+                the_inputs,input_length=self.wav_padding(wavs)
+                the_labels,label_length=self.label_padding(labels)
+                inputs=[the_inputs,the_labels,input_length,label_length]
                 outputs=np.zeros([self.batch_size,1],dtype=np.float32)
                 yield inputs,outputs
-                wavs,labels,label_lengths,input_lengths=[],[],[],[]
-            input_length=fbank.shape[1]//8+1
-            fbank=pad_sequences(fbank,maxlen=self.audio_len,dtype='float',padding='post',truncating='post')
-            fbank=fbank.reshape(fbank.shape[0],fbank.shape[1],1)
-            input_lengths.append(input_length)
+                wavs,labels=[],[]
             wavs.append(fbank)
-            label_length=len(label)
-            label_lengths.append(label_length)
-            label=np.array(label+[0]*(self.label_len-label_length))
             labels.append(label)
         if len(wavs)!=0:
-            wavs=np.array(wavs)
-            the_inputs=np.expand_dims(wavs,axis=4)
-            the_inputs=wavs.transpose((0,2,1,3))
-            the_labels=np.array(labels)
-            input_lengths=np.array(input_lengths)
-            label_lengths=np.array(label_lengths)
-            inputs=[the_inputs,the_labels,input_lengths,label_lengths]
+            the_inputs,input_length=self.wav_padding(wavs)
+            the_labels,label_length=self.label_padding(labels)
+            inputs=[the_inputs,the_labels,input_length,label_length]
             outputs=np.zeros([len(wavs),1],dtype=np.float32)
             yield inputs,outputs
+    def wav_padding(self,wavs):
+        wav_lens=[wav.shape[0] for wav in wavs]
+        max_len=self.audio_len
+        wav_lens=np.array([leng//8+leng%8 for leng in wav_lens],dtype=np.int32).T
+        new_wavs=np.zeros((len(wavs),max_len,self.audio_feature_len,1))
+        for i in range(len(wavs)):
+            wav=wavs[i][:wavs[i].shape[0]//8*8,:]
+            #wav=wavs[i]
+            new_wavs[i,:wav.shape[0],:,:]=wav
+        return new_wavs,wav_lens
+
+    def label_padding(self,labels):
+        label_lens=np.array([[label.shape[0]] for label in labels])
+        max_len=self.label_len
+        new_labels=np.zeros((len(labels),max_len),dtype=np.int32)
+        for i in range(len(labels)):
+            new_labels[i,:len(labels[i])]=labels[i]
+        return new_labels,label_lens
 
 
     def create_dict(self):

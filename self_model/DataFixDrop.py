@@ -35,7 +35,7 @@ class ConfigSpeech(DataConfig):
     batch_size=16
     dev_num=10
     train_num=100
-    model_dir='models/speech_model/fix/'
+    model_dir='models/speech_model/fixdropout/'
     model_name='speech.model'
     model_path=model_dir+model_name
     log_dir='log/'
@@ -134,10 +134,6 @@ class DataSpeech(ConfigSpeech):
         for i in range(len(labels)):
             new_labels[i,:len(labels[i])]=labels[i]
         return new_labels,label_lens
-
-
-
-
     def create_dict(self):
         self.py2id={}
         self.id2py={}

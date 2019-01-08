@@ -125,6 +125,12 @@ class DataSpeech(ConfigSpeech):
                 self.py2id[py.strip()]=int(idx.strip())
                 self.id2py[int(idx.strip())]=py.strip()
 
+    def create_online(self,wav_path):
+        assert os.path.exists(wav_path)
+        fbank=extract_feature(wav_path)
+        assert fbank.shape[0]<self.audio_len
+        wav,wav_len=self.wav_padding([fbank])
+        yield wav,wav_len
 
 def main():
     data=DataSpeech()

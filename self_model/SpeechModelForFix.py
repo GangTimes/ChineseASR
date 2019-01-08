@@ -72,7 +72,7 @@ class ModelSpeech(DataSpeech): # 语音模型类
         loss_out = Lambda(self.ctc_lambda_func, output_shape=(1,), name='ctc')([y_pred, labels, input_length, label_length])
         self.ctc_model = Model(inputs=[input_data, labels, input_length, label_length], outputs=loss_out)
         self.ctc_model.summary()
-        opt = Adam(lr = 0.001, beta_1 = 0.9, beta_2 = 0.999, decay = 0.0, epsilon = 10e-8)
+        opt = Adam(lr = 0.0001, beta_1 = 0.9, beta_2 = 0.999, decay = 0.0, epsilon = 10e-8)
         self.ctc_model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer = opt)
 
 
